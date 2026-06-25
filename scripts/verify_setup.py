@@ -6,11 +6,29 @@ Exit 0 if all OK, 1 if any FAIL.
 
 import os
 import sys
+from pathlib import Path
 
 
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+
+
+def load_dotenv_if_present() -> None:
+    """Load key-value pairs from .env in the project root if it exists."""
+    env_path = Path(__file__).resolve().parents[1] / ".env"
+    if not env_path.exists():
+        return
+
+    for raw_line in env_path.read_text(encoding="utf-8").splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        key = key.strip()
+        value = value.strip().strip('"').strip("'")
+        if key and key not in os.environ and value:
+            os.environ[key] = value
 
 
 def check_python_version():
@@ -52,9 +70,11 @@ def check_gemini_reachable() -> tuple[bool, str]:
 
 def main() -> int:
     """Run all checks, print summary, return exit code."""
+    load_dotenv_if_present()
+
     checks = [
         ("Python version", check_python_version()),
-        ("GOOGLE_API_KEY", check_env_var("GOOGLE_API_KEY", "ดู Quickstart ขั้นที่ 4")),
+        ("GOOGLE_API_KEY", check_env_var("GOOGLE_API_KEY", "ใส่ key จริงใน .env หรือ set env var ตาม Quickstart ขั้นที่ 4")),
         ("Gemini API connectivity", check_gemini_reachable()),
     ]
 
