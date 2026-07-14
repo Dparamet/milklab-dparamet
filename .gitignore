@@ -36,3 +36,17 @@ Thumbs.db
 *.seed
 *.out
 *.err
+
+# Ignore JSON files
+# .gitignore
+
+# เฉพาะไฟล์ credentials
+credentials.json
+service-account.json
+
+# ทุกไฟล์ที่ลงท้ายด้วย .key.json
+*.key.json
+
+# แต่ไม่เอาไฟล์ config ทั่วไป
+!package.json
+!tsconfig.json

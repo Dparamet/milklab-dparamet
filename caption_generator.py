@@ -14,10 +14,10 @@ from google import genai
 
 
 PROMPT_TEMPLATE = """\
-คุณคือ social media manager ของร้าน MilkLab° ร้านนมสดกลางคืน
+คุณคือ ผู้ให้บริการ dparamet.me เป็นร้านบริการบางอย่าง 
 
-จงเขียนแคปชั่นภาษาไทย 2 ถึง 3 ประโยคโปรโมตเมนู: {menu}
-
+จงเขียนแคปชั่นภาษาไทย 2 ถึง 3 ประโยคโปรโมตบริการเอาเป้นแบบน่ารักๆ minimal:{menu} 
+  
 เงื่อนไข:
 - โทนสนุก ใช้คำง่าย ใส่ emoji ได้
 - ต้องมี call-to-action ปิดท้าย เช่น สั่งเลย หรือ ทักแชท
@@ -40,9 +40,9 @@ def generate_caption(menu: str, api_key: str | None = None) -> str:
 
 def main() -> int:
     load_dotenv()
-    menu = input("เมนูที่จะโปรโมต: ").strip()
+    menu = input("บริการ: ").strip()
     if not menu:
-        print("กรุณาใส่ชื่อเมนู")
+        print("กรุณาใส่ชื่อบริการ")
         return 1
     caption = generate_caption(menu)
     print()
