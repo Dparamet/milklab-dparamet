@@ -1,3 +1,13 @@
+---
+title: MilkLab RAG
+emoji: 🥛
+colorFrom: blue
+colorTo: pink
+sdk: streamlit
+sdk_version: "1.59.2"
+app_file: app.py
+pinned: false
+---
 # MilkLab° Solopreneur Starter (Course 69-1)
 
 Forked from the original owner’s repository and remade by D paramet (@dparamet).
