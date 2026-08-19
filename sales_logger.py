@@ -1,8 +1,9 @@
-"""MilkLab Sales Logger (S2).
+"""ECP RMUTI KKC Student Request Logger (S2).
 
 Usage:
-    python sales_logger.py --menu "นมหมีฮอกไกโด" --qty 2 --price 65
+    python sales_logger.py --student_id "66332110001-1" --category "คำร้องเพิ่ม-ถอน" --topic "ขอเพิ่มรายวิชาล่าช้า" --details "วิชา ECP201 เนื่องจากติดปัญหาโอนย้ายสาขา"
 """
+
 
 import argparse
 import json
@@ -16,16 +17,24 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-def append_to_sheet(menu: str, qty: int, price: float) -> dict:
-    """เพิ่มข้อมูลลง Google Sheet (6 columns)"""
+
+def append_to_sheet(student_id: str, category: str, topic: str, details: str) -> dict:
+    """บันทึกคำร้องนักศึกษาลง Google Sheet (6 columns: Timestamp, Date, Student_ID, Category, Topic, Details)"""
     
     # Validate
-    if not menu or not menu.strip():
-        raise ValueError("ชื่อเมนูห้ามว่าง")
-    if qty <= 0:
-        raise ValueError("จำนวนต้องมากกว่า 0")
-    if price < 0:
-        raise ValueError("ราคาห้ามติดลบ")
+    student_id = str(student_id).strip()
+    category = str(category).strip()
+    topic = str(topic).strip()
+    details = str(details).strip()
+
+    if not student_id:
+        raise ValueError("รหัสนักศึกษาห้ามว่าง")
+    if not category:
+        raise ValueError("หมวดหมู่คำร้องห้ามว่าง")
+    if not topic:
+        raise ValueError("หัวข้อคำร้องห้ามว่าง")
+    if not details:
+        raise ValueError("รายละเอียดคำร้องห้ามว่าง")
 
     # อ่าน JSON จาก Environment Variable
     creds_json = os.getenv("GOOGLE_SHEETS_CREDENTIALS")
@@ -47,26 +56,24 @@ def append_to_sheet(menu: str, qty: int, price: float) -> dict:
 
     # คำนวณค่าต่างๆ
     now = datetime.now()
-    timestamp = now.strftime("%Y-%m-%d %H:%M:%S")  # A: Timestamp (วันที่+เวลา)
-    date = now.strftime("%Y-%m-%d")                 # B: Date (แค่วันที่)
-    service = menu                                  # C: Service
-    total = qty * price                             # F: Total
+    timestamp = now.strftime("%Y-%m-%d %H:%M:%S")  # A: Timestamp
+    date = now.strftime("%Y-%m-%d")                 # B: Date
 
-    # เพิ่มแถว: [Timestamp, Date, Service, Price, Quantity, Total]
-    sheet.append_row([timestamp, date, service, price, qty, total])
+    # เพิ่มแถว: [Timestamp, Date, Student_ID, Category, Topic, Details]
+    sheet.append_row([timestamp, date, student_id, category, topic, details])
 
     return {
         "timestamp": timestamp,
         "date": date,
-        "service": service,
-        "price": price,
-        "qty": qty,
-        "total": total
+        "student_id": student_id,
+        "category": category,
+        "topic": topic,
+        "details": details
     }
 
 
 def send_notification(message: str) -> str:
-    """ส่ง message ไปยัง Telegram bot"""
+    """ส่งข้อความแจ้งเตือนคำร้องไปยัง Telegram bot"""
     token = os.getenv("TELEGRAM_BOT_TOKEN")
     chat_id = os.getenv("TELEGRAM_CHAT_ID")
 
@@ -81,28 +88,29 @@ def send_notification(message: str) -> str:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="MilkLab Sales Logger")
-    parser.add_argument("--menu", required=True, help="ชื่อเมนู")
-    parser.add_argument("--qty", type=int, required=True, help="จำนวนขวด")
-    parser.add_argument("--price", type=float, required=True, help="ราคาต่อขวด")
+    parser = argparse.ArgumentParser(description="CPE KKC Student Request Logger")
+    parser.add_argument("--student_id", required=True, help="รหัสนักศึกษา")
+    parser.add_argument("--category", required=True, help="หมวดหมู่คำร้อง")
+    parser.add_argument("--topic", required=True, help="หัวข้อคำร้อง")
+    parser.add_argument("--details", required=True, help="รายละเอียดคำร้อง")
     args = parser.parse_args()
 
     try:
-        row = append_to_sheet(args.menu, args.qty, args.price)
-        total = row["total"]
+        row = append_to_sheet(args.student_id, args.category, args.topic, args.details)
     except Exception as exc:
         print(f"[ERROR] บันทึก Sheet ล้มเหลว: {exc}", file=sys.stderr)
         return 1
 
     try:
-        provider = send_notification(f"บันทึก {args.menu} x{args.qty} = {total} บาท")
+        msg = f"📝 [คำร้องนักศึกษาใหม่]\nรหัส: {args.student_id}\nหมวดหมู่: {args.category}\nเรื่อง: {args.topic}\nรายละเอียด: {args.details}"
+        provider = send_notification(msg)
     except Exception as exc:
         print(f"[WARN] บันทึก Sheet สำเร็จแต่ส่งแจ้งเตือนล้มเหลว: {exc}", file=sys.stderr)
         return 0
 
-    print(f"[OK] บันทึกและแจ้งเตือนผ่าน {provider} เรียบร้อย ยอด {total} บาท")
+    print(f"[OK] บันทึกคำร้องรหัส {args.student_id} และแจ้งเตือนผ่าน {provider} เรียบร้อย")
     return 0
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(main())

@@ -1,55 +1,52 @@
 ---
-title: MilkLab RAG
-emoji: 🥛
+title: ECP RMUTI KKC Smart Academic & Student Concierge
+emoji: 🎓
 colorFrom: blue
-colorTo: pink
+colorTo: indigo
 sdk: streamlit
 sdk_version: "1.59.2"
 app_file: app.py
 pinned: false
 ---
 
-# MilkLab° Solopreneur Starter (Course 69-1)
+# ECP RMUTI KKC Smart Academic & Student Concierge (น้อง Byte 🤖)
 
-Forked from the original owner’s repository and remade by D paramet (@dparamet).
+ระบบผู้ช่วยอัจฉริยะบริการการศึกษา คำร้อง และสนับสนุนนักศึกษา **"น้อง Byte"** สาขาวิชาวิศวกรรมคอมพิวเตอร์และอิเล็กทรอนิกส์ (ECP) คณะวิศวกรรมศาสตร์ มหาวิทยาลัยเทคโนโลยีราชมงคลอีสาน วิทยาเขตขอนแก่น (มทร.อีสาน ขอนแก่น)
 
-Template repo สำหรับวิชา 31-407-106-406 : AI for Solopreneurs
+![น้อง Byte](assets/byte_avatar.png)
 
 ## Overview
 
-MilkLab° เป็น starter repository สำหรับงานเรียนและโปรเจกต์ย่อยในรายวิชา โดยแยกฟีเจอร์หลักออกเป็น session เพื่อให้พัฒนาและทดสอบได้เป็นขั้นตอน
+**น้อง Byte** ได้รับการพัฒนาขึ้นเพื่อทำหน้าที่เป็น Concierge ดูแลและช่วยเหลือนักศึกษาสาขาวิชาวิศวกรรมคอมพิวเตอร์และอิเล็กทรอนิกส์ (ECP RMUTI KKC) ในด้านต่างๆ:
+- ข้อมูลหลักสูตร วศ.บ. และแผนการเรียน
+- แบบฟอร์มคำร้องและขั้นตอนทางทะเบียน (RE Forms เช่น R.04, R.14, R.26)
+- รับเรื่องและบันทึกคำร้องนักศึกษาลงระบบ Google Sheet + Telegram Alert อัตโนมัติ
+- รับฟังและให้คำปรึกษาปัญหาความเครียด หมดไฟในการเรียน พร้อมส่งต่อสายด่วนสุขภาพจิต 1323
 
-## Quick Start
+## Project Structure & Architecture
 
-1. **Use this template** then create a new repository ตั้งชื่อ `milklab-<ชื่อ>`
-2. เปิด **Codespaces** จาก repo ใหม่
-3. ตั้ง user-level Codespaces secret `GOOGLE_API_KEY` ตาม Quickstart
-4. รัน `python scripts/verify_setup.py` ใน terminal เพื่อเช็กสภาพแวดล้อม
-
-## Project Structure
-
-| ไฟล์ | Session | คำอธิบาย |
+| ไฟล์ / โฟลเดอร์ | Session | หน้าที่และคำอธิบาย |
 |---|---|---|
-| `caption_generator.py` | S1 | สร้างแคปชั่นให้โพสต์ MilkLab |
-| `sales_logger.py` | S2 | บันทึกยอดขายลง Google Sheets |
-| `agent_harness.py` | S2 | รับคำสั่งภาษาไทยและเรียก tool ที่เกี่ยวข้อง |
-| `app.py` | S3 | Streamlit RAG chatbot |
+| `assets/byte_avatar.png` | UI | ภาพ Avatar ประจำตัว "น้อง Byte" |
+| `knowledge_base/` | S3 | Multi-file Knowledge Base (`01_curriculum.md`, `02_re_forms.md`, `03_mental_health.md`) |
+| `app.py` | S3 | Streamlit RAG Chatbot ประจำตัวน้อง Byte พร้อมระบบ FAISS Indexing และ Guardrails |
+| `caption_generator.py` | S1 | สร้างโพสต์ประกาศกำหนดการทางวิชาการและแคปชั่นสร้างกำลังใจนักศึกษา ECP |
+| `agent_harness.py` | S2 | AI Agent วิเคราะห์คำสั่งภาษาไทยและเรียก Tool จัดการคำร้องนักศึกษา |
+| `agent_tools.py` | S2 | Tool Registry, Tool Dispatcher และ Validation Guardrails |
+| `sales_logger.py` | S2 | บันทึกคำร้องนักศึกษาลง Google Sheets และส่งแจ้งเตือนผ่าน Telegram |
+| `morning_report.py` | S2 | สรุปรายงานคำร้องนักศึกษาประจำวัน |
+| `run_tests.py` | Dev | ชุดทดสอบ 7 Test Cases สำหรับตรวจสอบความถูกต้องของ Agent & Guardrails |
+
+## Knowledge Base Sources
+1. เว็บไซต์นักศึกษา: [https://web.kkc.rmuti.ac.th/p/student](https://web.kkc.rmuti.ac.th/p/student)
+2. แบบฟอร์มดาวน์โหลด: [https://web.kkc.rmuti.ac.th/p/download](https://web.kkc.rmuti.ac.th/p/download)
+3. ระบบบริการการศึกษา ESS: [https://ess-register.rmuti.ac.th/AppKK/](https://ess-register.rmuti.ac.th/AppKK/)
+4. ข้อมูลหลักสูตรคณะวิศวกรรมศาสตร์: [https://www.eng.rmuti.ac.th](https://www.eng.rmuti.ac.th)
 
 ## Tech Stack
-
-- Python 3.11
+- Python 3.11+
 - Gemini API (`google-genai`)
-- Streamlit (S3)
-- gspread (S2)
-
-## Notes
-
-- Repository นี้เป็นเวอร์ชันที่ fork มาจากต้นฉบับและปรับแต่งต่อโดย D paramet
-- ถ้าจะนำไปใช้งานต่อ สามารถแก้ชื่อโปรเจกต์และรายละเอียด course link ได้ตามต้องการ
-
-## Course Link
-
-[course-691-stsw](https://github.com/<owner>/course-691-stsw) (link จะ update ตอนสร้าง public repo)
-
-##
-[Rag LLM](https://milklab-dparamet-4ssjvzyftqghymtappy8qwe.streamlit.app/)
+- Streamlit (UI)
+- Sentence-Transformers & FAISS (RAG Vector Search)
+- gspread & Google Sheets API
+
