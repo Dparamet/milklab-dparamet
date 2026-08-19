@@ -1,4 +1,4 @@
-"""MilkLab Morning Report (S2).
+"""ECP RMUTI KKC Student Requests Daily Report (S2).
 
 Usage:
     python morning_report.py --date 2026-07-14
@@ -19,32 +19,34 @@ load_dotenv()
 
 
 def summarize_for_date(rows: list[dict], date: str) -> dict:
-    """สรุปยอดขายของวันที่ระบุจาก rows ที่ส่งเข้ามา (ไม่อ่าน Sheet เอง)"""
+    """สรุปคำร้องนักศึกษาของวันที่ระบุจาก rows ที่ส่งเข้ามา"""
     matched = [
         r for r in rows
         if str(r.get("Date") or r.get("date") or r.get("Timestamp", "")).startswith(date)
     ]
-    total = sum(float(r.get("Total") or r.get("total") or 0) for r in matched)
-    by_menu: dict[str, float] = {}
+    by_category: dict[str, int] = {}
     for r in matched:
-        menu = r.get("Service") or r.get("menu") or "?"
-        qty = float(r.get("Quantity") or r.get("qty") or 0)
-        by_menu[menu] = by_menu.get(menu, 0) + qty
+        cat = r.get("Category") or r.get("category") or "ทั่วไป"
+        by_category[cat] = by_category.get(cat, 0) + 1
 
-    return {"date": date, "count": len(matched), "total": total, "by_menu": by_menu}
+    return {"date": date, "count": len(matched), "by_category": by_category}
 
 
 def format_message(summary: dict) -> str:
-    """แปลง summary dict เป็นข้อความ Telegram (pure function, test ได้)"""
-    lines = [f"สรุปยอดขายวันที่ {summary['date']}", f"จำนวนบิล: {summary['count']}"]
-    for menu, qty in summary["by_menu"].items():
-        lines.append(f"- {menu}: {qty:g} ขวด")
-    lines.append(f"ยอดรวม: {summary['total']:g} บาท")
+    """แปลง summary dict เป็นข้อความรายงานสรุปคำร้องนักศึกษา"""
+    lines = [f"📊 สรุปรายการคำร้องนักศึกษา ECP RMUTI KKC ประจำวันที่ {summary['date']}", f"จำนวนคำร้องทั้งหมด: {summary['count']} รายการ"]
+    if summary["by_category"]:
+        lines.append("แยกตามหมวดหมู่:")
+        for cat, count in summary["by_category"].items():
+            lines.append(f"- {cat}: {count} รายการ")
+    else:
+        lines.append("ไม่มีรายการคำร้องในวันดังกล่าว")
     return "\n".join(lines)
 
 
+
 def fetch_rows() -> list[dict]:
-    """เชื่อมต่อ Google Sheet แล้วดึงข้อมูลทุกแถวกลับมาเป็น list of dict"""
+    """เชื่อมต่อ Google Sheet แล้วดึงข้อมูลคำร้องทุกแถวกลับมาเป็น list of dict"""
     creds_json = os.getenv("GOOGLE_SHEETS_CREDENTIALS")
     if not creds_json:
         raise RuntimeError("GOOGLE_SHEETS_CREDENTIALS not set in environment")
@@ -59,7 +61,7 @@ def fetch_rows() -> list[dict]:
 
 
 def send_notification(message: str) -> None:
-    """ส่ง message ไปยัง Telegram bot"""
+    """ส่ง message สรุปคำร้องไปยัง Telegram bot"""
     token = os.getenv("TELEGRAM_BOT_TOKEN")
     chat_id = os.getenv("TELEGRAM_CHAT_ID")
     if not token or not chat_id:
@@ -71,7 +73,7 @@ def send_notification(message: str) -> None:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="MilkLab Morning Report")
+    parser = argparse.ArgumentParser(description="CPE KKC Student Requests Daily Report")
     parser.add_argument("--date", default=date_cls.today().isoformat(), help="YYYY-MM-DD")
     parser.add_argument("--dry-run", action="store_true", help="พิมพ์ข้อความแทนการส่ง Telegram")
     args = parser.parse_args()
@@ -100,4 +102,4 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(main())

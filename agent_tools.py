@@ -1,52 +1,68 @@
 # agent_tools.py
 from datetime import datetime, timedelta
 
+
 class MockLogger:
-    """Mock สำหรับ sales_logger และ morning_report"""
+    """Mock สำหรับ student_request logger และรายงานสรุป"""
     
-    def append_sale(self, menu, qty, price):
-        total = qty * price
-        return {'ok': True, 'message': f'บันทึก {menu} x{qty} @ {price} = {total} บาท', 'total': total}
+    def append_student_request(self, student_id: str, category: str, topic: str, details: str):
+        return {
+            'ok': True,
+            'message': f'บันทึกคำร้อง {topic} ({category}) รหัสนักศึกษา {student_id} เรียบร้อย',
+            'student_id': student_id,
+            'category': category,
+            'topic': topic,
+            'details': details
+        }
     
-    def get_yesterday_summary(self):
-        return {'ok': True, 'message': 'สรุปยอดขายเมื่อวาน: 150 แก้ว, รายได้ 8,250 บาท'}
+    def get_request_summary(self):
+        return {'ok': True, 'message': 'สรุปรายการคำร้องนักศึกษา: ทั้งหมด 12 รายการ (อนุมัติแล้ว 9, รอพิจารณา 3)'}
 
-sales_logger = MockLogger()
-morning_report = MockLogger()
 
-def validate_sale(menu, qty, price):
-    """🛡️ Validation Guardrail: ปฏิเสธ qty ติดลบหรือ 0"""
-    if qty <= 0:
-        return 'qty > 0'
-    if price < 0:
-        return 'price >= 0'
-    if qty > 500:
-        return 'qty too large'
+request_logger = MockLogger()
+summary_report = MockLogger()
+
+
+def validate_student_request(student_id: str, category: str, topic: str, details: str):
+    """🛡️ Validation Guardrail: ตรวจสอบความถูกต้องของข้อมูลคำร้องนักศึกษา"""
+    s_id = str(student_id).strip()
+    if not s_id or len(s_id) < 5:
+        return 'invalid student_id'
+    if not str(category).strip():
+        return 'category required'
+    if not str(topic).strip():
+        return 'topic required'
+    if not str(details).strip():
+        return 'details required'
     return None
 
-def log_sale(menu, quantity, price):
-    """Tool: บันทึกการขาย"""
-    err = validate_sale(menu, quantity, price)
+
+def log_student_request(student_id: str, category: str, topic: str, details: str):
+    """Tool: บันทึกคำร้องหรือคำขอนักศึกษา"""
+    err = validate_student_request(student_id, category, topic, details)
     if err:
-        return {'ok': False, 'tool': 'log_sale', 'error': f'Validation failed: {err}'}
-    return sales_logger.append_sale(menu, quantity, price)
+        return {'ok': False, 'tool': 'log_student_request', 'error': f'Validation failed: {err}'}
+    return request_logger.append_student_request(student_id, category, topic, details)
 
-def get_yesterday_summary():
-    """Tool: สรุปยอดขายเมื่อวาน"""
-    return morning_report.get_yesterday_summary()
 
-def send_alert(message):
-    """Tool: ส่งแจ้งเตือน"""
+def get_request_summary():
+    """Tool: สรุปสถานะรายการคำร้องนักศึกษา"""
+    return summary_report.get_request_summary()
+
+
+def send_alert(message: str):
+    """Tool: ส่งแจ้งเตือนผ่าน Bot"""
     return {'ok': True, 'message': f'ส่งแจ้งเตือน: {message}'}
 
+
 TOOL_REGISTRY = {
-    'log_sale': {
-        'fn': log_sale,
-        'args': ('menu', 'quantity', 'price'),
-        'coerce': {'menu': str, 'quantity': int, 'price': float}
+    'log_student_request': {
+        'fn': log_student_request,
+        'args': ('student_id', 'category', 'topic', 'details'),
+        'coerce': {'student_id': str, 'category': str, 'topic': str, 'details': str}
     },
-    'get_yesterday_summary': {
-        'fn': get_yesterday_summary,
+    'get_request_summary': {
+        'fn': get_request_summary,
         'args': (),
         'coerce': {}
     },
@@ -57,8 +73,9 @@ TOOL_REGISTRY = {
     }
 }
 
-def execute_tool(tool_name, kwargs):
-    """ตัวรัน Tool"""
+
+def execute_tool(tool_name: str, kwargs: dict):
+    """ตัวรัน Tool พร้อม type coercion และ error handling"""
     if tool_name not in TOOL_REGISTRY:
         return {'ok': False, 'error': f'Unknown tool: {tool_name}'}
     
@@ -69,11 +86,11 @@ def execute_tool(tool_name, kwargs):
         if k in kwargs:
             try:
                 kwargs[k] = v_type(kwargs[k])
-            except:
+            except Exception:
                 return {'ok': False, 'error': f'Bad type for {k}'}
     
     # Execute function
     try:
         return tool['fn'](**{k: kwargs[k] for k in tool['args']})
     except Exception as e:
-        return {'ok': False, 'error': str(e)}
+        return {'ok': False, 'error': str(e)}
